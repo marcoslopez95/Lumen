@@ -136,7 +136,16 @@ $router->get('routes', 'Route\RouteController@_index');
 $router->get('routes/{id}', 'Route\RouteController@_show');
 $router->post('routes', 'Route\RouteController@_store');
 $router->put('routes/{id}', 'Route\RouteController@_update');
-$router->delete('routes/{id}', 'Route\RouteController@_delete');    
+$router->delete('routes/{id}', 'Route\RouteController@_delete');  
+  
+/** routes para jugador **/ 
+ 
+$router->get('jugadors', 'jugador\jugadorController@_index');
+$router->get('jugadors/{id}', 'jugador\jugadorController@_show');
+$router->post('jugadors', 'jugador\jugadorController@_store');
+$router->put('jugadors/{id}', 'jugador\jugadorController@_update');
+$router->delete('jugadors/{id}', 'jugador\jugadorController@_destroy');
+
 });
 
  
@@ -147,11 +156,3 @@ $router->get('asosiations/{id}', 'Asosiation\AsosiationController@_show');
 $router->post('asosiations', 'Asosiation\AsosiationController@_store');
 $router->put('asosiations/{id}', 'Asosiation\AsosiationController@_update');
 $router->delete('asosiations/{id}', 'Asosiation\AsosiationController@_destroy');
- 
-/** routes para jugador **/ 
- 
-$router->get('jugadors', 'jugador\jugadorController@_index');
-$router->get('jugadors/{id}', 'jugador\jugadorController@_show');
-$router->post('jugadors', 'jugador\jugadorController@_store');
-$router->put('jugadors/{id}', 'jugador\jugadorController@_update');
-$router->delete('jugadors/{id}', 'jugador\jugadorController@_destroy');
