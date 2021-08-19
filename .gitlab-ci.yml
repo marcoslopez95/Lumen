@@ -1,0 +1,171 @@
+stages:
+  - backup
+  - build
+  - deploy
+  - rollback
+
+dev_backup_job:
+  stage: backup
+  script:
+    - docker image tag devrubick2transport-api:latest devrubick2transport-api:prev || true
+  tags:
+    - devapp
+  only :
+    - develop
+
+dev_build_job:
+  stage: build
+  script:
+    - cp .env.example .env
+    - sed -i -e "s;^\s*SECRET_KEY=.*;SECRET_KEY=$SECRET_KEY;g" .env
+    - sed -i -e "s;^\s*DB_CONNECTION=.*;DB_CONNECTION=pgsql;g" .env
+    - sed -i -e "s;^\s*DB_DATABASE=.*;DB_DATABASE=devvia;g" .env
+    - sed -i -e "s;^\s*DB_USERNAME=.*;DB_USERNAME=devvia;g" .env
+    - sed -i -e "s;^\s*DB_PASSWORD=.*;DB_PASSWORD=$DEV_DB_PASS;g" .env
+    - sed -i -e "s;^\s*DB_HOST=.*;DB_HOST=192.168.0.10;g" .env
+    - sed -i -e "s;^\s*DB_PORT=.*;DB_PORT=5433;g" .env
+    - sed -i -e "s;^\s*DEBUG=.*;DEBUG=1;g" .env
+    - sed -i -e "s;^\s*APP_URL=.*;APP_URL=devvia.zippyttech.com;g" .env
+    - docker build -t devrubick2transport-api .
+  when: on_success
+  tags:
+    - devapp
+  only :
+    - develop
+
+dev_deploy_job:
+  stage: deploy
+  script:
+    - docker stop devrubick2transport-api || true
+    - docker rm devrubick2transport-api || true
+    - docker run -d --restart always --name devrubick2transport-api --network devapp -p 10091:80 devrubick2transport-api
+    - docker exec devrubick2transport-api php artisan migrate
+  when: on_success
+  tags:
+    - devapp
+  only:
+    - develop
+
+dev_rollback_job:
+  stage: rollback
+  script:
+    - docker stop devrubick2transport-api || true
+    - docker rm devrubick2transport-api || true
+    - docker image tag devrubick2transport-api:prev devrubick2transport-api:latest || true
+    - docker run -d --restart always --name devrubick2transport-api --network devapp -p 10091:80 devrubick2transport-api
+  when: manual
+  tags:
+    - devapp
+  only:
+    - develop
+
+qa_backup_job:
+  stage: backup
+  script:
+    - docker image tag qarubick2transport-api:latest qarubick2transport-api:prev || true
+  tags:
+    - qaapp
+  only :
+    - qa
+
+qa_build_job:
+  stage: build
+  script:
+    - cp .env.example .env
+    - sed -i -e "s;^\s*SECRET_KEY=.*;SECRET_KEY=$SECRET_KEY;g" .env
+    - sed -i -e "s;^\s*DB_CONNECTION=.*;DB_CONNECTION=pgsql;g" .env
+    - sed -i -e "s;^\s*DB_DATABASE=.*;DB_DATABASE=qarubick2transport;g" .env
+    - sed -i -e "s;^\s*DB_USERNAME=.*;DB_USERNAME=qarubick2transport;g" .env
+    - sed -i -e "s;^\s*DB_PASSWORD=.*;DB_PASSWORD=$QA_DB_PASS;g" .env
+    - sed -i -e "s;^\s*DB_HOST=.*;DB_HOST=10.0.0.25;g" .env
+    - sed -i -e "s;^\s*DB_PORT=.*;DB_PORT=5432;g" .env
+    - sed -i -e "s;^\s*DEBUG=.*;DEBUG=1;g" .env
+    - sed -i -e "s;^\s*APP_URL=.*;APP_URL=qarubick2transport.zippyttech.com;g" .env
+    - docker build -t qarubick2transport-api .
+  when: on_success
+  tags:
+    - qaapp
+  only :
+    - qa
+
+
+qa_deploy_job:
+  stage: deploy
+  script:
+    - docker stop qarubick2transport-api || true
+    - docker rm qarubick2transport-api || true
+    - docker run -d --restart always --name qarubick2transport-api --network qaapp -p 8106:80 -v qarubick2transport-api-images:/var/www/html/public/images -v qarubick2transport-api-images:/var/www/html/public/logos qarubick2transport-api
+    - docker exec qarubick2transport-api php artisan migrate
+  when: on_success
+  tags:
+    - qaapp
+  only:
+    - qa
+
+qa_rollback_job:
+  stage: rollback
+  script:
+    - docker stop qarubick2transport-api || true
+    - docker rm qarubick2transport-api || true
+    - docker image tag qarubick2transport-api:prev qarubick2transport-api:latest || true
+    - docker run -d --restart always --name qarubick2transport-api --network qaapp -p 8106:80 -v qarubick2transport-api-images:/var/www/html/public/images -v qarubick2transport-api-images:/var/www/html/public/logos qarubick2transport-api
+  when: manual
+  tags:
+    - qaapp
+  only:
+    - qa
+
+prod_backup_job:
+  stage: backup
+  script:
+    - docker image tag rubick2transport-api:latest rubick2transport-api:prev || true
+  tags:
+    - prodapp
+  only :
+    - tags
+
+prod_build_job:
+  stage: build
+  script:
+    - cp .env.example .env
+    - sed -i -e "s;^\s*SECRET_KEY=.*;SECRET_KEY=$SECRET_KEY;g" .env
+    - sed -i -e "s;^\s*DB_CONNECTION=.*;DB_CONNECTION=pgsql;g" .env
+    - sed -i -e "s;^\s*DB_DATABASE=.*;DB_DATABASE=rubick2transport;g" .env
+    - sed -i -e "s;^\s*DB_USERNAME=.*;DB_USERNAME=rubick2transport;g" .env
+    - sed -i -e "s;^\s*DB_PASSWORD=.*;DB_PASSWORD=$PROD_DB_PASS;g" .env
+    - sed -i -e "s;^\s*DB_HOST=.*;DB_HOST=10.0.0.31;g" .env
+    - sed -i -e "s;^\s*DB_PORT=.*;DB_PORT=5432;g" .env
+    - sed -i -e "s;^\s*DEBUG=.*;DEBUG=0;g" .env
+    - sed -i -e "s;^\s*APP_URL=.*;APP_URL=qarubick2transport.zippyttech.com;g" .env
+    - docker build -t rubick2transport-api .
+  when: on_success
+  tags:
+    - prodapp
+  only :
+    - tags
+
+prod_deploy_job:
+  stage: deploy
+  script:
+    - docker stop rubick2transport-api || true
+    - docker rm rubick2transport-api || true
+    - docker run -d --restart always --name rubick2transport-api --network app -p 9013:80 -v rubick2transport-api-images:/var/www/html/public/images -v rubick2transport-api-images:/var/www/html/public/logos rubick2transport-api
+    - docker exec rubick2transport-api php artisan migrate
+  when: on_success
+  tags:
+    - prodapp
+  only:
+    - tags
+
+prod_rollback_job:
+  stage: rollback
+  script:
+    - docker stop rubick2transport-api || true
+    - docker rm rubick2transport-api || true
+    - docker image tag rubick2transport-api:prev rubick2transport-api:latest || true
+    - docker run -d --restart always --name rubick2transport-api --network app -p 9013:80 -v rubick2transport-api-images:/var/www/html/public/images -v rubick2transport-api-images:/var/www/html/public/logos rubick2transport-api
+  when: manual
+  tags:
+    - prodapp
+  only:
+    - tags
