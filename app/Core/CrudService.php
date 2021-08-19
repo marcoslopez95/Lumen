@@ -36,7 +36,7 @@ class CrudService
     {
         $this->repository = $repository;
     }
-
+ 
 
     public function _index(Request $request){
         try{

@@ -18,4 +18,14 @@ class jugadorRepository extends CrudRepository
         parent::__construct($model);
     }
 
+    public function _index($request = null, $user = null)
+    {
+        return $this->model->all();
+    }
+
+    public function _show($id)
+    {
+        $jugador = $this->model->find($id);
+        return $jugador;
+    }
 }
